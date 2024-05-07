@@ -1,0 +1,82 @@
+version: '3.8'
+# lancer avec : docker compose -f docker-compose.dev.yml --env-file .env up
+services:
+  backend:
+    container_name: backend-pfl
+    restart: on-failure
+    depends_on:
+      - db
+    build:
+      context: ./backend
+      target: ${TARGET:-development}
+      args:
+        - JDK_IMAGE=17.0.3_7-jdk-jammy
+        - JRE_VERSION=17-jre-jammy
+        - APP_NAME=pfl
+      # ou
+      #- JDK_IMAGE=11.0.19_7-jdk-jammy
+      #- JRE_VERSION=11-jre-jammy
+      #- APP_NAME=boilerplate-spring-angular-mysqldb
+    environment:
+      MARIADB_CONNECTION_STRING: ${MARIADB_CONNECTION_STRING}
+      MARIADB_USER: ${MARIADB_USER:-admin}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-pwd}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-mariadb}
+    ports:
+      - ${BACKEND_PORT:-8080}:8080
+      - '35729:35729'
+      - '5005:5005'
+    volumes:
+      - ./backend:/app
+      - ./backend/.m2:/root/.m2
+
+  frontend:
+    container_name: frontend-pfl
+    restart: on-failure
+    build:
+      context: ./frontend
+      args:
+        - NODE_VERSION=20-slim
+        - NG_VERSION=17
+    ports:
+      - ${FRONTEND_PORT:-4200}:4200
+    volumes:
+      - ./frontend:/app
+
+  db:
+    container_name: mariadb-pfl
+    # mysql ou mariadb:11.1-rc ou mariadb:11.0.2-jammy
+    image: mariadb:11.0.2-jammy
+    restart: on-failure
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-password}
+      MARIADB_USER: ${MARIADB_USER:-admin}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-pwd}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-dbname}
+    ports:
+      - ${MARIADB_PORT:-3306}:3306
+    volumes:
+      # named volumes
+      - ./mariadb-data:/var/lib/mariadb
+      # seeding scripts
+      #- ./init-db:/docker-entrypoint-initdb.d
+
+  adminer:
+    container_name: adminer-pfl
+    image: adminer:4.8.0-standalone
+    restart: on-failure
+    environment:
+      ADMINER_DEFAULT_SERVER: ${ADMINER_DEFAULT_SERVER:-mysql}
+    ports:
+      - ${ADMINER_PORT:-8080}:8080
+
+  smtp4dev:
+    container_name: smtp4dev-pfl
+    image: rnwood/smtp4dev:v3
+    restart: on-failure
+    ports:
+      - '9081:80'
+      - '9025:25'
+
+volumes:
+  mariadb-data:
