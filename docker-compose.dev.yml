@@ -64,7 +64,7 @@ services:
   adminer:
     container_name: adminer-pfl
     image: adminer:4.8.0-standalone
-    restart: on-failure
+    restart: always
     environment:
       ADMINER_DEFAULT_SERVER: ${ADMINER_DEFAULT_SERVER:-mysql}
     ports:
@@ -73,10 +73,10 @@ services:
   smtp4dev:
     container_name: smtp4dev-pfl
     image: rnwood/smtp4dev:v3
-    restart: on-failure
+    restart: always
     ports:
-      - '9081:80'
-      - '9025:25'
+      - ${SMTP4DEV_WEB_INTERFACE_PORT:-9080}:80
+      - ${SMTP4DEV_SMTP_SERVER_PORT:-9025}:25
 
 volumes:
   mariadb-data:
