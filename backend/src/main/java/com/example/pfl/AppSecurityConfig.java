@@ -22,7 +22,10 @@ public class AppSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         authorize ->
-                                authorize.requestMatchers(POST, "/signup", "/creations").permitAll()
+                                authorize
+                                        .requestMatchers(POST, "/signup").permitAll()
+                                        .requestMatchers(POST, "/activation").permitAll()
+                                        .requestMatchers(POST, "/creations").permitAll()
                                         .anyRequest().authenticated()
                 ).build();
     }

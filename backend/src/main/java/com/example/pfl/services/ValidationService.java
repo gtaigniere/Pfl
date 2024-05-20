@@ -34,4 +34,8 @@ public class ValidationService {
         validationRepository.save(validation);
         notificationService.send(validation);
     }
+
+    public Validation readAccordingToTheCode(String code) {
+        return validationRepository.findByCode(code).orElseThrow(() -> new RuntimeException("Votre code est invalide"));
+    }
 }
