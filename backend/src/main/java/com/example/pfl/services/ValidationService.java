@@ -11,12 +11,11 @@ import java.util.Random;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 
-
 @AllArgsConstructor
 @Service
 public class ValidationService {
-    private final ValidationRepository validationRepository;
-    private final NotificationService notificationService;
+    private ValidationRepository validationRepository;
+    private NotificationService notificationService;
 
     public void register(User user) {
         Validation validation = new Validation();

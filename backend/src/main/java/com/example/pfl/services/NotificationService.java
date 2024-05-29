@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 @Service
 public class NotificationService {
-    private final JavaMailSender javaMailSender;
+    JavaMailSender javaMailSender;
 
     public void send(Validation validation) {
         SimpleMailMessage message = new SimpleMailMessage();
