@@ -6,6 +6,8 @@ import com.example.pfl.entities.User;
 import com.example.pfl.entities.Validation;
 import com.example.pfl.repositories.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,10 +17,10 @@ import java.util.Optional;
 
 @AllArgsConstructor
 @Service
-public class UserService {
-    private final UserRepository userRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final ValidationService validationService;
+public class UserService implements UserDetailsService {
+    private UserRepository userRepository;
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private ValidationService validationService;
 
     public void signup(User user) {
         if (!user.getEmail().contains("@") || !user.getEmail().contains(".")) {
@@ -48,5 +50,10 @@ public class UserService {
         User userActivated = userRepository.findById(validation.getUtilisateur().getId()).orElseThrow(() -> new RuntimeException("Utilisteur inconnu"));
         userActivated.setActif(true);
         userRepository.save(userActivated);
+    }
+
+    @Override
+    public User loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Aucun utilisateur ne correspond à cet identifiant"));
     }
 }

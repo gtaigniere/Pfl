@@ -1,7 +1,10 @@
 package com.example.pfl.entities;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 
@@ -9,8 +12,6 @@ import java.time.Instant;
 @AllArgsConstructor
 @Getter
 @Setter
-@ToString
-@Builder
 @Entity
 @Table(name = "validation")
 public class Validation {

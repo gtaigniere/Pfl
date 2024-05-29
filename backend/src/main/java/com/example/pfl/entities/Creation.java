@@ -1,14 +1,15 @@
 package com.example.pfl.entities;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-@ToString
-@Builder
 @Entity
 @Table(name = "creation")
 public class Creation {
@@ -21,4 +22,7 @@ public class Creation {
 
     @Column(length = 4, nullable = false)
     private int annee;
+
+    @ManyToOne
+    private User utilisateur;
 }
