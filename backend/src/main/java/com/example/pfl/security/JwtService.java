@@ -1,6 +1,8 @@
 package com.example.pfl.security;
 
+import com.example.pfl.entities.Jwt;
 import com.example.pfl.entities.User;
+import com.example.pfl.repositories.JwtRepository;
 import com.example.pfl.services.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -18,8 +20,10 @@ import java.util.function.Function;
 @AllArgsConstructor
 @Service
 public class JwtService {
+    private static final String BEARER = "bearer";
     private final String ENCRIPTION_KEY = "695801124cce09e21d5aa458c9b84c8f0fc53e55d2850313346239d9adfa6dae";
     private UserService userService;
+    private JwtRepository jwtRepository;
 
 //    @Value("${token.signing.key}")
 //    private String jwtSigningKey;
@@ -29,7 +33,16 @@ public class JwtService {
 
     public Map<String, String> generate(String username) {
         User user = this.userService.loadUserByUsername(username);
-        return this.generateJwt(user);
+        final Map<String, String> jwtMap = this.generateJwt(user);
+
+        final Jwt jwt = Jwt.builder()
+                .valeur(jwtMap.get(BEARER))
+                .desactive(false)
+                .expire(false)
+                .utilisateur(user)
+                .build();
+        this.jwtRepository.save(jwt);
+        return jwtMap;
     }
 
     public String extractUsername(String token) {
@@ -75,7 +88,7 @@ public class JwtService {
                 .setClaims(claims)
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
-        return Map.of("bearer", bearer);
+        return Map.of(BEARER, bearer);
     }
 
     private Key getKey() {
