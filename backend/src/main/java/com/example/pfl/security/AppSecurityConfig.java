@@ -37,9 +37,9 @@ public class AppSecurityConfig {
                 .authorizeHttpRequests(
                         authorize ->
                                 authorize
-                                        .requestMatchers(POST, "/signup").permitAll()
-                                        .requestMatchers(POST, "/activation").permitAll()
-                                        .requestMatchers(POST, "/login").permitAll()
+                                        .requestMatchers(POST, "/auth/signup").permitAll()
+                                        .requestMatchers(POST, "/auth/activation").permitAll()
+                                        .requestMatchers(POST, "/auth/login").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .sessionManagement(
