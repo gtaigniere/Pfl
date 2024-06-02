@@ -6,7 +6,6 @@ import com.example.pfl.security.JwtService;
 import com.example.pfl.services.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,7 +19,7 @@ import java.util.Map;
 @Slf4j
 @AllArgsConstructor
 @RestController
-@RequestMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "auth")
 public class UserController {
     private AuthenticationManager authenticationManager;
     private UserService userService;
@@ -52,7 +51,7 @@ public class UserController {
 
     @PostMapping(path = "logout")
     public void logout() {
-        log.info("Déconnexion");
+        log.info("Deconnexion");
         jwtService.logout();
     }
 }
