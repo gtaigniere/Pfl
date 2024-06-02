@@ -40,6 +40,7 @@ public class UserController {
 
     @PostMapping(path = "login")
     public Map<String, String> login(@RequestBody AuthenticationDTO authenticationDTO) {
+        log.info("Connexion");
         final Authentication authenticate = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authenticationDTO.email(), authenticationDTO.motDePasse())
         );
@@ -47,5 +48,11 @@ public class UserController {
             return jwtService.generate(authenticationDTO.email());
         }
         return null;
+    }
+
+    @PostMapping(path = "logout")
+    public void logout() {
+        log.info("Déconnexion");
+        jwtService.logout();
     }
 }

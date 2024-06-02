@@ -9,14 +9,22 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+@Slf4j
+@Transactional
 @AllArgsConstructor
 @Service
 public class JwtService {
@@ -24,6 +32,10 @@ public class JwtService {
     private final String ENCRIPTION_KEY = "695801124cce09e21d5aa458c9b84c8f0fc53e55d2850313346239d9adfa6dae";
     private UserService userService;
     private JwtRepository jwtRepository;
+
+    public Jwt tokenByValue(String value) {
+        return this.jwtRepository.findByValeurAndDesactiveAndExpire(value, false, false).orElseThrow(() -> new RuntimeException("Token inconnu"));
+    }
 
 //    @Value("${token.signing.key}")
 //    private String jwtSigningKey;
@@ -94,5 +106,31 @@ public class JwtService {
     private Key getKey() {
         final byte[] decoder = Decoders.BASE64.decode(ENCRIPTION_KEY);
         return Keys.hmacShaKeyFor(decoder);
+    }
+
+    public void logout() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Jwt jwt = this.jwtRepository.findUtilisateurValidToken(user.getEmail(), false, false).orElseThrow(() -> new RuntimeException("Token invalide"));
+        jwt.setDesactive(true);
+        jwt.setExpire(true);
+        this.jwtRepository.save(jwt);
+    }
+
+    private void disabledTokens(User user) {
+        final List<Jwt> jwtList = this.jwtRepository.findUtilisateur(user.getEmail()).peek(
+                jwt -> {
+                    jwt.setDesactive(true);
+                    jwt.setExpire(true);
+                }
+        ).toList();
+
+        this.jwtRepository.saveAll(jwtList);
+    }
+
+//    @Scheduled(cron = "@daily")
+    @Scheduled(cron = "0 */1 * * * *")
+    public void removeUselessJwt() {
+        log.info("Suppression des tokens à {}", Instant.now());
+        this.jwtRepository.deleteAllByDesactiveAndExpire(true, true);
     }
 }
