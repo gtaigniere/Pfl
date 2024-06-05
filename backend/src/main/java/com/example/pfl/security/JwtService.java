@@ -4,6 +4,7 @@ import com.example.pfl.entities.Jwt;
 import com.example.pfl.entities.RefreshToken;
 import com.example.pfl.entities.User;
 import com.example.pfl.repositories.JwtRepository;
+import com.example.pfl.repositories.RefreshTokenRepository;
 import com.example.pfl.services.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -13,6 +14,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +36,7 @@ public class JwtService {
     private final String ENCRIPTION_KEY = "695801124cce09e21d5aa458c9b84c8f0fc53e55d2850313346239d9adfa6dae";
     private UserService userService;
     private JwtRepository jwtRepository;
+    private RefreshTokenRepository refreshTokenRepository;
 
     public Jwt tokenByValue(String value) {
         if (this.jwtRepository.findByValeurAndDesactiveAndExpire(value, true, true).isPresent()) {
@@ -142,19 +145,41 @@ public class JwtService {
         this.jwtRepository.saveAll(jwtList);
     }
 
-//    @Scheduled(cron = "@daily")
-//    @Scheduled(cron = "0 */1 * * * *")
-//    public void removeUselessJwt() {
-//        log.info("Suppression des tokens à {}", Instant.now());
-//        this.jwtRepository.deleteAllByDesactiveAndExpire(true, true);
-//    }
-
     public Map<String, String> refreshToken(Map<String, String> refreshTokenRequest) {
-        final Jwt jwt = this.jwtRepository.findByRefreshToken(refreshTokenRequest.get(REFRESH)).orElseThrow(() -> new RuntimeException("Token invalide"));
+        final Jwt jwt = this.jwtRepository.findByRefreshToken(refreshTokenRequest.get(REFRESH)).orElseThrow(() -> new RuntimeException("Token non trouvé"));
         if (jwt.getRefreshToken().isExpire() || jwt.getRefreshToken().getExpiration().isBefore(Instant.now())) {
-            throw new RuntimeException("Token invalide");
+            RefreshToken refreshToken = this.refreshTokenRepository.findByValeur(refreshTokenRequest.get(REFRESH)).orElseThrow(() -> new RuntimeException("RefreshToken non trouvé"));
+            refreshToken.setExpire(true);
+            this.refreshTokenRepository.save(refreshToken);
+            throw new RuntimeException("RefreshToken expiré");
         }
         this.disabledTokens(jwt.getUtilisateur());
         return this.generate(jwt.getUtilisateur().getEmail());
     }
+
+    public List<RefreshToken> getAll() {
+        return (List<RefreshToken>) this.refreshTokenRepository.findAll();
+    }
+
+    public void delete(Integer id) {
+        this.refreshTokenRepository.deleteById(id);
+    }
+
+    //    @Scheduled(cron = "@daily")
+    @Scheduled(cron = "0 */1 * * * *")
+    public void removeUselessJwt() {
+        log.info("Suppression des tokens à {}", Instant.now());
+        this.jwtRepository.deleteAllByDesactiveAndExpire(true, true);
+    }
+
+//    @Scheduled(cron = "0 */1 * * * *")
+//    public void removeUselessRefreshToken() {
+//        log.info("Suppression des refreshTokens à {}", Instant.now());
+//        List<RefreshToken> refreshTokenList = this.getAll();
+//        refreshTokenList.forEach(refreshToken -> {
+//            if (refreshToken.getExpiration().isBefore(Instant.now())) {
+//                this.refreshTokenRepository.deleteById(refreshToken.getId());
+//            }
+//        });
+//    }
 }
