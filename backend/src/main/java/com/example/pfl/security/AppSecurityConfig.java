@@ -40,6 +40,7 @@ public class AppSecurityConfig {
                                         .requestMatchers(POST, "/auth/signup").permitAll()
                                         .requestMatchers(POST, "/auth/activation").permitAll()
                                         .requestMatchers(POST, "/auth/login").permitAll()
+                                        .requestMatchers(POST, "/auth/refresh-token").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .sessionManagement(

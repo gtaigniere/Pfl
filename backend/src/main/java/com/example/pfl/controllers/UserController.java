@@ -9,10 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -35,6 +32,12 @@ public class UserController {
     public void activation(@RequestBody Map<String, String> activation) {
         log.info("Activation");
         userService.activation(activation);
+    }
+
+    @PostMapping(path = "refresh-token")
+    public @ResponseBody Map<String, String> refreshToken(@RequestBody Map<String, String> refreshTokenRequest) {
+        log.info("Rafraichissement token");
+        return this.jwtService.refreshToken(refreshTokenRequest);
     }
 
     @PostMapping(path = "login")

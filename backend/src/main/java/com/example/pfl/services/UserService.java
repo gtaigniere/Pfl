@@ -47,7 +47,7 @@ public class UserService implements UserDetailsService {
         if (Instant.now().isAfter(validation.getExpiration())) {
             throw new RuntimeException("Votre code a expiré");
         }
-        User userActivated = userRepository.findById(validation.getUtilisateur().getId()).orElseThrow(() -> new RuntimeException("Utilisteur inconnu"));
+        User userActivated = userRepository.findById(validation.getUtilisateur().getId()).orElseThrow(() -> new RuntimeException("Utilisateur inconnu"));
         userActivated.setActif(true);
         userRepository.save(userActivated);
     }
