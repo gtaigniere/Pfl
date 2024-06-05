@@ -1,8 +1,10 @@
 package com.example.pfl.security;
 
 import com.example.pfl.entities.Jwt;
+import com.example.pfl.entities.RefreshToken;
 import com.example.pfl.entities.User;
 import com.example.pfl.repositories.JwtRepository;
+import com.example.pfl.repositories.RefreshTokenRepository;
 import com.example.pfl.services.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -21,6 +23,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Slf4j
@@ -29,11 +32,16 @@ import java.util.function.Function;
 @Service
 public class JwtService {
     private static final String BEARER = "bearer";
+    public static final String REFRESH = "refresh";
     private final String ENCRIPTION_KEY = "695801124cce09e21d5aa458c9b84c8f0fc53e55d2850313346239d9adfa6dae";
     private UserService userService;
     private JwtRepository jwtRepository;
+    private RefreshTokenRepository refreshTokenRepository;
 
     public Jwt tokenByValue(String value) {
+        if (this.jwtRepository.findByValeurAndDesactiveAndExpire(value, true, true).isPresent()) {
+            throw new RuntimeException("Le token n'est plus valide");
+        }
         return this.jwtRepository.findByValeurAndDesactiveAndExpire(value, false, false).orElseThrow(() -> new RuntimeException("Token inconnu"));
     }
 
@@ -45,15 +53,25 @@ public class JwtService {
 
     public Map<String, String> generate(String username) {
         User user = this.userService.loadUserByUsername(username);
-        final Map<String, String> jwtMap = this.generateJwt(user);
+        this.disabledTokens(user);
+        final Map<String, String> jwtMap = new java.util.HashMap<>(this.generateJwt(user));
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .valeur(UUID.randomUUID().toString())
+                .expire(false)
+                .creation(Instant.now())
+                .expiration(Instant.now().plusMillis(5 * 60 * 1000))
+                .build();
 
         final Jwt jwt = Jwt.builder()
                 .valeur(jwtMap.get(BEARER))
                 .desactive(false)
                 .expire(false)
                 .utilisateur(user)
+                .refreshToken(refreshToken)
                 .build();
         this.jwtRepository.save(jwt);
+        jwtMap.put(REFRESH, refreshToken.getValeur());
         return jwtMap;
     }
 
@@ -85,7 +103,7 @@ public class JwtService {
 
     private Map<String, String> generateJwt(User user) {
         final long currentTime = System.currentTimeMillis();
-        final long expirationTime = currentTime + 30 * 60 * 1000;
+        final long expirationTime = currentTime + 60 * 1000;
 
         final Map<String, Object> claims = Map.of(
                 "pseudo", user.getPseudo(),
@@ -127,10 +145,41 @@ public class JwtService {
         this.jwtRepository.saveAll(jwtList);
     }
 
-//    @Scheduled(cron = "@daily")
+    public Map<String, String> refreshToken(Map<String, String> refreshTokenRequest) {
+        final Jwt jwt = this.jwtRepository.findByRefreshToken(refreshTokenRequest.get(REFRESH)).orElseThrow(() -> new RuntimeException("Token non trouvé"));
+        if (jwt.getRefreshToken().isExpire() || jwt.getRefreshToken().getExpiration().isBefore(Instant.now())) {
+            RefreshToken refreshToken = this.refreshTokenRepository.findByValeur(refreshTokenRequest.get(REFRESH)).orElseThrow(() -> new RuntimeException("RefreshToken non trouvé"));
+            refreshToken.setExpire(true);
+            this.refreshTokenRepository.save(refreshToken);
+            throw new RuntimeException("RefreshToken expiré");
+        }
+        this.disabledTokens(jwt.getUtilisateur());
+        return this.generate(jwt.getUtilisateur().getEmail());
+    }
+
+    public List<RefreshToken> getAll() {
+        return (List<RefreshToken>) this.refreshTokenRepository.findAll();
+    }
+
+    public void delete(Integer id) {
+        this.refreshTokenRepository.deleteById(id);
+    }
+
+    //    @Scheduled(cron = "@daily")
     @Scheduled(cron = "0 */1 * * * *")
     public void removeUselessJwt() {
         log.info("Suppression des tokens à {}", Instant.now());
         this.jwtRepository.deleteAllByDesactiveAndExpire(true, true);
     }
+
+//    @Scheduled(cron = "0 */1 * * * *")
+//    public void removeUselessRefreshToken() {
+//        log.info("Suppression des refreshTokens à {}", Instant.now());
+//        List<RefreshToken> refreshTokenList = this.getAll();
+//        refreshTokenList.forEach(refreshToken -> {
+//            if (refreshToken.getExpiration().isBefore(Instant.now())) {
+//                this.refreshTokenRepository.deleteById(refreshToken.getId());
+//            }
+//        });
+//    }
 }
