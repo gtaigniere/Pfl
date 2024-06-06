@@ -56,4 +56,19 @@ public class UserService implements UserDetailsService {
     public User loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Aucun utilisateur ne correspond à cet identifiant"));
     }
+
+    public void passwordChange(Map<String, String> parameters) {
+        User user = loadUserByUsername(parameters.get("email"));
+        this.validationService.register(user);
+    }
+
+    public void passwordNew(Map<String, String> parameters) {
+        User user = loadUserByUsername(parameters.get("email"));
+        final Validation validation = validationService.readAccordingToTheCode(parameters.get("code"));
+        if (validation.getUtilisateur().getEmail().equals(user.getEmail())) {
+            String encryptedPassword = bCryptPasswordEncoder.encode(parameters.get("motDePasse"));
+            user.setMotDePasse(encryptedPassword);
+            this.userRepository.save(user);
+        }
+    }
 }

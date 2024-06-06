@@ -41,6 +41,8 @@ public class AppSecurityConfig {
                                         .requestMatchers(POST, "/auth/activation").permitAll()
                                         .requestMatchers(POST, "/auth/login").permitAll()
                                         .requestMatchers(POST, "/auth/refresh-token").permitAll()
+                                        .requestMatchers(POST, "/auth/password-change").permitAll()
+                                        .requestMatchers(POST, "/auth/password-new").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .sessionManagement(

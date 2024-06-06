@@ -34,6 +34,18 @@ public class UserController {
         userService.activation(activation);
     }
 
+    @PostMapping(path = "password-change")
+    public void passwordChange(@RequestBody Map<String, String> parameters) {
+        log.info("Changement de mot de passe");
+        userService.passwordChange(parameters);
+    }
+
+    @PostMapping(path = "password-new")
+    public void passwordNew(@RequestBody Map<String, String> parameters) {
+        log.info("Nouveau mot de passe");
+        userService.passwordNew(parameters);
+    }
+
     @PostMapping(path = "refresh-token")
     public @ResponseBody Map<String, String> refreshToken(@RequestBody Map<String, String> refreshTokenRequest) {
         log.info("Rafraichissement token");
