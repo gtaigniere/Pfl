@@ -1,7 +1,7 @@
 package com.example.pfl.security;
 
 import com.example.pfl.entities.Jwt;
-import com.example.pfl.services.UserService;
+import com.example.pfl.services.AccountService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,11 +16,11 @@ import java.io.IOException;
 
 @Service
 public class JwtFilter extends OncePerRequestFilter {
-    private final UserService userService;
+    private final AccountService accountService;
     private final JwtService jwtService;
 
-    public JwtFilter(UserService userService, JwtService jwtService) {
-        this.userService = userService;
+    public JwtFilter(AccountService accountService, JwtService jwtService) {
+        this.accountService = accountService;
         this.jwtService = jwtService;
     }
 
@@ -40,7 +40,7 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if (!isTokenExpired && tokenInDatabase.getUtilisateur().getEmail().equals(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService.loadUserByUsername(username);
+            UserDetails userDetails = accountService.loadUserByUsername(username);
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }

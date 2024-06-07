@@ -1,10 +1,7 @@
 package com.example.pfl.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +13,7 @@ import java.util.Collections;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 @Entity
 @Table(name = "utilisateur")
 public class User implements UserDetails {
@@ -39,6 +37,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+//        return this.role.getLibelle().getAuthorities();
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.getLibelle()));
     }
 
