@@ -16,7 +16,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
 @Configuration
@@ -48,7 +47,7 @@ public class AppSecurityConfig {
                                         .requestMatchers(POST, "/auth/password-new").permitAll()
 //                                        .requestMatchers(GET, "/creations").hasRole("ADMIN")
 //                                        .requestMatchers(GET, "/creations").hasAnyRole("ADMIN", "MANAGER")
-                                        .requestMatchers(GET, "/creations").hasAuthority("ROLE_MANAGER")
+//                                        .requestMatchers(GET, "/creations").hasAuthority("ROLE_MANAGER")
 //                                        .requestMatchers(GET, "/creations").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                                         .anyRequest().authenticated()
                 )
