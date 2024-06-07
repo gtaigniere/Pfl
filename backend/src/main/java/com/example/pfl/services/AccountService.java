@@ -27,19 +27,26 @@ public class AccountService implements UserDetailsService {
             throw new RuntimeException("Votre mail est invalide");
         }
         Optional<User> optionalUser = userRepository.findByEmail(user.getEmail());
+
         if (optionalUser.isPresent()) {
             throw new RuntimeException("Votre mail est déjà utilisé");
         }
-
-        String encryptedPassword = bCryptPasswordEncoder.encode(user.getMotDePasse());
+        final String encryptedPassword = bCryptPasswordEncoder.encode(user.getMotDePasse());
         user.setMotDePasse(encryptedPassword);
 
-        Role userRole = new Role();
+        final Role userRole = new Role();
         userRole.setLibelle(RoleType.USER);
-        user.setRole(userRole);
 
-        user = userRepository.save(user);
-        validationService.register(user);
+        if (user.getRole() != null && user.getRole().getLibelle().equals(RoleType.ADMIN)) {
+            userRole.setLibelle(RoleType.ADMIN);
+            user.setActif(true);
+        }
+        user.setRole(userRole);
+        user = this.userRepository.save(user);
+
+        if (userRole.getLibelle().equals(RoleType.USER)) {
+            this.validationService.register(user);
+        }
     }
 
     public void activation(Map<String, String> activation) {

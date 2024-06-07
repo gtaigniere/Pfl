@@ -4,6 +4,7 @@ import com.example.pfl.entities.Creation;
 import com.example.pfl.services.CreationService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 public class CreationController {
     private final CreationService creationService;
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public List<Creation> getAll() {
         return creationService.getAll();

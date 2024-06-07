@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
@@ -18,10 +19,12 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
     private final AccountService accountService;
     private final JwtService jwtService;
+    private final HandlerExceptionResolver handlerExceptionResolver;
 
-    public JwtFilter(AccountService accountService, JwtService jwtService) {
+    public JwtFilter(AccountService accountService, JwtService jwtService, HandlerExceptionResolver handlerExceptionResolver) {
         this.accountService = accountService;
         this.jwtService = jwtService;
+        this.handlerExceptionResolver = handlerExceptionResolver;
     }
 
     @Override
@@ -31,20 +34,25 @@ public class JwtFilter extends OncePerRequestFilter {
         String username = null;
         boolean isTokenExpired = true;
 
-        final String authorization = request.getHeader("Authorization");
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            token = authorization.substring(7);
-            tokenInDatabase = jwtService.tokenByValue(token);
-            isTokenExpired = jwtService.isTokenExpired(token);
-            username = jwtService.extractUsername(token);
-        }
+        try {
+            final String authorization = request.getHeader("Authorization");
 
-        if (!isTokenExpired && tokenInDatabase.getUtilisateur().getEmail().equals(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = accountService.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        }
+            if (authorization != null && authorization.startsWith("Bearer ")) {
+                token = authorization.substring(7);
+                tokenInDatabase = jwtService.tokenByValue(token);
+                isTokenExpired = jwtService.isTokenExpired(token);
+                username = jwtService.extractUsername(token);
+            }
 
-        filterChain.doFilter(request, response);
+            if (!isTokenExpired && tokenInDatabase.getUtilisateur().getEmail().equals(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = accountService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            }
+
+            filterChain.doFilter(request, response);
+        } catch (final Exception exception) {
+            handlerExceptionResolver.resolveException(request, response, null, exception);
+        }
     }
 }
