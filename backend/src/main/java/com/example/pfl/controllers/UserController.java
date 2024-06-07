@@ -16,8 +16,8 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
-//    @PreAuthorize("hasAuthority('ADMIN_READ')")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    //    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN_READ')")
     @GetMapping
     public List<User> getAll() {
         return userService.getAll();

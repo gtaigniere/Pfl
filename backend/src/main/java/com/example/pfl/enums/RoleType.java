@@ -16,7 +16,7 @@ import static com.example.pfl.enums.PermissionType.*;
 @Getter
 public enum RoleType {
     USER(
-            Set.of(PermissionType.USER_CREATE_CREATION)
+            Set.of(USER_CREATE_CREATION)
     ),
     MANAGER(
             Set.of(
@@ -44,7 +44,7 @@ public enum RoleType {
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         final List<SimpleGrantedAuthority> grantedAuthorities = this.getPermissions().stream().map(
-                permission -> new SimpleGrantedAuthority(permission.getLibelle())
+                permission -> new SimpleGrantedAuthority(permission.name())
         ).collect(Collectors.toList());
 
         grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
