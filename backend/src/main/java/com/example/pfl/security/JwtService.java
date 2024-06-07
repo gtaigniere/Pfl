@@ -5,7 +5,7 @@ import com.example.pfl.entities.RefreshToken;
 import com.example.pfl.entities.User;
 import com.example.pfl.repositories.JwtRepository;
 import com.example.pfl.repositories.RefreshTokenRepository;
-import com.example.pfl.services.UserService;
+import com.example.pfl.services.AccountService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -34,7 +34,7 @@ public class JwtService {
     private static final String BEARER = "bearer";
     public static final String REFRESH = "refresh";
     private final String ENCRIPTION_KEY = "695801124cce09e21d5aa458c9b84c8f0fc53e55d2850313346239d9adfa6dae";
-    private UserService userService;
+    private AccountService accountService;
     private JwtRepository jwtRepository;
     private RefreshTokenRepository refreshTokenRepository;
 
@@ -52,7 +52,7 @@ public class JwtService {
 //    private long jwtDuration;
 
     public Map<String, String> generate(String username) {
-        User user = this.userService.loadUserByUsername(username);
+        User user = this.accountService.loadUserByUsername(username);
         this.disabledTokens(user);
         final Map<String, String> jwtMap = new java.util.HashMap<>(this.generateJwt(user));
 
@@ -60,7 +60,7 @@ public class JwtService {
                 .valeur(UUID.randomUUID().toString())
                 .expire(false)
                 .creation(Instant.now())
-                .expiration(Instant.now().plusMillis(5 * 60 * 1000))
+                .expiration(Instant.now().plusMillis(10 * 60 * 1000))
                 .build();
 
         final Jwt jwt = Jwt.builder()
@@ -103,7 +103,7 @@ public class JwtService {
 
     private Map<String, String> generateJwt(User user) {
         final long currentTime = System.currentTimeMillis();
-        final long expirationTime = currentTime + 60 * 1000;
+        final long expirationTime = currentTime + 2 * 60 * 1000;
 
         final Map<String, Object> claims = Map.of(
                 "pseudo", user.getPseudo(),
@@ -173,13 +173,15 @@ public class JwtService {
     }
 
 //    @Scheduled(cron = "0 */1 * * * *")
-//    public void removeUselessRefreshToken() {
-//        log.info("Suppression des refreshTokens à {}", Instant.now());
-//        List<RefreshToken> refreshTokenList = this.getAll();
-//        refreshTokenList.forEach(refreshToken -> {
-//            if (refreshToken.getExpiration().isBefore(Instant.now())) {
-//                this.refreshTokenRepository.deleteById(refreshToken.getId());
-//            }
-//        });
-//    }
+    /*
+    public void removeUselessRefreshToken() {
+        log.info("Suppression des refreshTokens à {}", Instant.now());
+        List<RefreshToken> refreshTokenList = this.getAll();
+        refreshTokenList.forEach(refreshToken -> {
+            if (refreshToken.getExpiration().isBefore(Instant.now())) {
+                this.refreshTokenRepository.deleteById(refreshToken.getId());
+            }
+        });
+    }
+    */
 }
